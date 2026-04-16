@@ -1,3 +1,4 @@
+ccflags-y += -Wno-unused-function
 obj-m += monitor.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
