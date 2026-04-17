@@ -9,7 +9,7 @@
 
 ## 2. Step by Step Commands and Instructions
 
-### 🛠️ Build
+###  Build
 
 ```bash
 cd boilerplate
@@ -19,7 +19,7 @@ cd ..
 
 ---
 
-### 📦 Load Kernel Module
+###  Load Kernel Module
 
 ```bash
 cd boilerplate
@@ -31,7 +31,7 @@ sudo chmod 666 /dev/container_monitor
 
 ---
 
-### 🚀 Start Supervisor (Terminal 1)
+###  Start Supervisor (Terminal 1)
 
 ```bash
 sudo ./boilerplate/engine supervisor ./rootfs-base
@@ -47,7 +47,7 @@ supervisor> stop <id>
 
 ---
 
-### 🧪 Launch Containers (inside supervisor)
+###  Launch Containers (inside supervisor)
 
 ```
 start alpha ./rootfs-alpha /bin/sh -c "echo hello; sleep 30"
@@ -56,7 +56,7 @@ start beta ./rootfs-beta /bin/sh -c "echo hello; sleep 30"
 
 ---
 
-### 📋 List Containers
+###  List Containers
 
 ```
 ps
@@ -64,7 +64,7 @@ ps
 
 ---
 
-### 🧠 Logging Example
+###  Logging Example
 
 ```bash
 cat logs/alpha.log
@@ -72,7 +72,7 @@ cat logs/alpha.log
 
 ---
 
-### 🛑 Stop Containers
+###  Stop Containers
 
 ```
 stop alpha
@@ -81,7 +81,7 @@ stop beta
 
 ---
 
-### 🧾 Kernel Logs
+###  Kernel Logs
 
 ```bash
 sudo dmesg | tail
@@ -89,7 +89,7 @@ sudo dmesg | tail
 
 ---
 
-### 🧹 Unload Module
+###  Unload Module
 
 ```bash
 sudo rmmod monitor
