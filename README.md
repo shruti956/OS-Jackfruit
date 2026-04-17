@@ -9,7 +9,7 @@
 
 ## 2. Step by Step Commands and Instructions
 
-###  Build
+### 🛠️ Build
 
 ```bash
 cd boilerplate
@@ -19,7 +19,7 @@ cd ..
 
 ---
 
-###  Load Kernel Module
+### 📦 Load Kernel Module
 
 ```bash
 cd boilerplate
@@ -31,7 +31,7 @@ sudo chmod 666 /dev/container_monitor
 
 ---
 
-###  Start Supervisor (Terminal 1)
+### 🚀 Start Supervisor (Terminal 1)
 
 ```bash
 sudo ./boilerplate/engine supervisor ./rootfs-base
@@ -47,7 +47,7 @@ supervisor> stop <id>
 
 ---
 
-###  Launch Containers (inside supervisor)
+### 🧪 Launch Containers (inside supervisor)
 
 ```
 start alpha ./rootfs-alpha /bin/sh -c "echo hello; sleep 30"
@@ -56,7 +56,7 @@ start beta ./rootfs-beta /bin/sh -c "echo hello; sleep 30"
 
 ---
 
-###  List Containers
+### 📋 List Containers
 
 ```
 ps
@@ -64,7 +64,7 @@ ps
 
 ---
 
-###  Logging Example
+### 🧠 Logging Example
 
 ```bash
 cat logs/alpha.log
@@ -72,7 +72,7 @@ cat logs/alpha.log
 
 ---
 
-###  Stop Containers
+### 🛑 Stop Containers
 
 ```
 stop alpha
@@ -81,7 +81,7 @@ stop beta
 
 ---
 
-###  Kernel Logs
+### 🧾 Kernel Logs
 
 ```bash
 sudo dmesg | tail
@@ -89,7 +89,7 @@ sudo dmesg | tail
 
 ---
 
-###  Unload Module
+### 🧹 Unload Module
 
 ```bash
 sudo rmmod monitor
@@ -99,7 +99,12 @@ sudo rmmod monitor
 
 ## 3. Screenshots
 
-All screenshots are available in the `OS-ss` folder in this repository.
+All screenshots are available in the `OS-ss` folder.
+
+* Container creation and supervisor interaction
+* Logging output
+* Memory monitoring and enforcement
+* Scheduler experiment (CPU scheduling behavior)
 
 ---
 
@@ -107,56 +112,42 @@ All screenshots are available in the `OS-ss` folder in this repository.
 
 ### Isolation Mechanisms
 
-* Containers are created using Linux namespaces via `clone()` with `CLONE_NEWPID`, `CLONE_NEWUTS`, and `CLONE_NEWNS`.
-* Each container has its own process tree, hostname, and filesystem view.
-* `chroot()` is used to isolate the root filesystem.
-* Containers share the host kernel, making them lightweight compared to VMs.
+* Containers use Linux namespaces (`CLONE_NEWPID`, `CLONE_NEWUTS`, `CLONE_NEWNS`)
+* `chroot()` ensures filesystem isolation
+* Each container has its own rootfs copy
 
 ---
 
 ### Supervisor and Process Lifecycle
 
-* The supervisor acts as a sub-reaper to clean up zombie processes.
-* Uses `SIGCHLD` handler with `waitpid(-1, &status, WNOHANG)`.
-* Maintains container metadata (ID, PID, state).
+* Supervisor acts as parent and sub-reaper
+* Handles `SIGCHLD` to clean up child processes
+* Maintains metadata for each container
 
 ---
 
-### IPC, Threads, and Synchronization
+### IPC and Logging
 
-#### Logging Path
-
-* Pipes capture container stdout/stderr.
-* Producer threads push logs into a bounded buffer.
-
-#### Control Path
-
-* UNIX domain socket (`/tmp/mini_runtime.sock`) used for CLI communication.
-
-#### Synchronization
-
-* Mutex + condition variables ensure safe communication.
+* Pipes capture stdout/stderr from containers
+* Logs stored in `logs/<container>.log`
+* Producer-consumer model used for logging
 
 ---
 
-### Memory Management and Enforcement
+### Memory Management
 
-#### Soft Limits
-
-* Logs warnings when threshold is exceeded.
-
-#### Hard Limits
-
-* Container is terminated when memory exceeds limit.
+* Kernel module tracks container memory usage
+* Soft limit → warning
+* Hard limit → container killed
 
 ---
 
 ## 5. Design Decisions and Tradeoffs
 
-* Used namespaces instead of full virtualization for lightweight isolation.
-* Single-threaded supervisor simplifies synchronization.
-* Pipes + sockets provide efficient IPC.
-* Kernel-space monitoring ensures strict memory enforcement.
+* Namespaces used instead of VMs for lightweight isolation
+* Single supervisor simplifies control logic
+* Kernel-space enforcement ensures reliability
+* Logging pipeline prevents blocking and data loss
 
 ---
 
@@ -164,66 +155,86 @@ All screenshots are available in the `OS-ss` folder in this repository.
 
 ### Experiment 1: Basic Container Execution
 
-| Container | Command Used         | Result  |
+| Container | Command              | Result  |
 | --------- | -------------------- | ------- |
 | alpha     | echo hello; sleep 30 | Success |
 | beta      | echo hello; sleep 30 | Success |
 
-* Containers successfully executed commands inside isolated rootfs.
-* Output was captured and logged.
-* `ps` correctly displayed container state.
+* Containers executed commands successfully
+* Output captured and displayed
+* Verified using `ps`
 
 ---
 
 ### Experiment 2: Logging Verification
 
-| Container | Command Used            | Result  |
+| Container | Command                 | Result  |
 | --------- | ----------------------- | ------- |
 | alpha     | echo Logging is working | Success |
 
-* Logs were successfully written to `logs/alpha.log`.
-* Verified stdout capture.
+* Logs stored in:
+
+  ```
+  logs/alpha.log
+  ```
+* Verified logging pipeline works correctly
 
 ---
 
 ### Experiment 3: Memory Monitoring (Normal Case)
 
-| Container      | Command Used  | Result  |
+| Container      | Command       | Result  |
 | -------------- | ------------- | ------- |
 | jackfruit_test | memory_hog 20 | Success |
 
-* Container executed within limits.
-* Successfully registered with kernel monitor.
+* Container ran within limits
+* Successfully registered with kernel monitor
 
 ---
 
 ### Experiment 4: Memory Limit Enforcement
 
-| Container | Command Used   | Result          |
-| --------- | -------------- | --------------- |
-| killme    | memory_hog 512 | Failed / Killed |
+| Container | Command        | Result |
+| --------- | -------------- | ------ |
+| killme    | memory_hog 512 | Killed |
 
-* Excess memory triggered enforcement.
-* Container was terminated.
+* Exceeded memory limit
+* Kernel terminated container
+* Verified via logs and behavior
 
 ---
 
 ### Experiment 5: Policy Testing
 
-| Container   | Command Used  | Result  |
+| Container   | Command       | Result  |
 | ----------- | ------------- | ------- |
 | policy_test | memory_hog 20 | Success |
 
-* Container executed under monitoring policy.
-* Successfully registered and tracked.
+* Container executed under monitoring policy
+* Successfully tracked
+
+---
+
+### Experiment 6: CPU Scheduling with Different Priorities
+
+| Process                 | nice value | Workload  | Observation                        |
+| ----------------------- | ---------- | --------- | ---------------------------------- |
+| cpu_hog (high priority) | 0          | CPU-bound | High CPU usage, faster progress    |
+| cpu_hog (low priority)  | 19         | CPU-bound | High CPU usage but slower progress |
+
+* Two CPU-bound workloads were executed simultaneously
+* Different `nice` values were used to change priority
+* The Linux scheduler distributed CPU time based on priority
+* The lower-priority process progressed more slowly
+* Demonstrates behavior of the Completely Fair Scheduler (CFS)
 
 ---
 
 ### Key Observations
 
-* Kernel module correctly registers containers.
-* Logging system works reliably.
-* Memory limits are enforced effectively.
-* Supervisor provides interactive control.
+* Multiple containers can run concurrently with isolation
+* Logging system reliably captures output
+* Kernel module enforces memory limits effectively
+* Scheduler distributes CPU based on priority and fairness
 
 
