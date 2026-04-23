@@ -10,34 +10,52 @@
 ## 2. Build, Load, and Run Instructions
 
 ### Build
+```bash
 cd boilerplate
 make
+```
 
 ### Load kernel module
+```bash
 sudo insmod monitor.ko
 ls /dev/container_monitor
+```
 
 ### Start supervisor (Terminal 1)
+```bash
 sudo ./engine supervisor ./rootfs
+```
 
 ### Launch containers (Terminal 2)
+```bash
 sudo ./engine start alpha $(pwd)/rootfs /cpu_hog
 sudo ./engine start beta  $(pwd)/rootfs /cpu_hog
+```
 
 ### List containers
+```bash
 sudo ./engine ps
+```
 
 ### View logs
+```bash
 sudo ./engine logs alpha
+```
 
 ### Stop a container
+```bash
 sudo ./engine stop alpha
+```
 
 ### Stop supervisor
+```bash
 Press Ctrl+C in Terminal 1
+```
 
 ### Unload module
+```bash
 sudo rmmod monitor
+```
 
 ## 3. Demo Screenshots
 Screenshots for all tasks are in the OS-ss folder
